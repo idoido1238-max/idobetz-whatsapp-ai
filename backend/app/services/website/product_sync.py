@@ -29,7 +29,7 @@ class ProductSyncService:
         self.api_url = settings.WEBSITE_API_URL
         self.api_key = settings.WEBSITE_API_KEY
         self.headers = {
-            "Authorization": f"******",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
         self._syncing = False
@@ -185,7 +185,7 @@ class ProductSyncService:
             "sale_price": float(p) if (p := product_data.get("sale_price")) else None,
             "stock_quantity": int(product_data.get("stock_quantity", product_data.get("stock", 0))),
             "in_stock": product_data.get("in_stock", True),
-            "is_active": product_data.get("is_active", product_data.get("status") == "active", True),
+            "is_active": product_data.get("is_active", product_data.get("status") == "active"),
             "is_featured": product_data.get("is_featured", False),
             "tags": product_data.get("tags", []),
             "specifications": product_data.get("specifications", product_data.get("attributes")),

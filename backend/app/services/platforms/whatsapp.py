@@ -227,7 +227,7 @@ class WhatsAppHandler:
 
         url = f"{self.api_base}/{self.phone_number_id}/messages"
         headers = {
-            "Authorization": f"******",
+            "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
 
@@ -239,7 +239,7 @@ class WhatsAppHandler:
     async def get_media_url(self, media_id: str) -> str:
         """Get download URL for a media file."""
         url = f"{self.api_base}/{media_id}"
-        headers = {"Authorization": f"******"}
+        headers = {"Authorization": f"Bearer {self.access_token}"}
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
@@ -247,7 +247,7 @@ class WhatsAppHandler:
 
     async def download_media(self, media_url: str) -> bytes:
         """Download media file content."""
-        headers = {"Authorization": f"******"}
+        headers = {"Authorization": f"Bearer {self.access_token}"}
         async with httpx.AsyncClient() as client:
             response = await client.get(media_url, headers=headers)
             response.raise_for_status()

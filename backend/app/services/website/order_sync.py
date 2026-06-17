@@ -28,7 +28,7 @@ class OrderSyncService:
         self.api_url = settings.WEBSITE_API_URL
         self.api_key = settings.WEBSITE_API_KEY
         self.headers = {
-            "Authorization": f"******",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
 

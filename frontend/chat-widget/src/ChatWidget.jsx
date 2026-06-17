@@ -28,7 +28,7 @@ const styles = `
   }
   .idobetz-header {
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    padding: 16px; color: white; display: flex; align-items: center; gap-12px;
+    padding: 16px; color: white; display: flex; align-items: center; gap: 12px;
   }
   .idobetz-header-text { margin-right: 12px; }
   .idobetz-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
@@ -100,7 +100,7 @@ export default function ChatWidget({
   const [userInfo, setUserInfo] = useState({ name: '', email: '' })
   const [infoCollected, setInfoCollected] = useState(!collectEmail)
   const messagesEndRef = useRef(null)
-  const widgetSessionId = useRef(sessionId || `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
+  const widgetSessionId = useRef(sessionId || `web_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 9)}`)
 
   useEffect(() => {
     if (open && messages.length === 0) {
