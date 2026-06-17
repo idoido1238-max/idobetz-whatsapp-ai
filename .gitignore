@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.log
+
+# Environment files
+.env
+.env.production
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+.npm
+*.tgz
+
+# Build artifacts
+frontend/admin-dashboard/dist/
+frontend/chat-widget/dist/
+frontend/*/dist/
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Media uploads
+uploads/
+media/
+
+# SSL certs
+ssl/
+*.pem
+*.key
+*.crt
+
+# Temp files
+tmp/
+temp/
