@@ -331,9 +331,10 @@ export default function ChatSimulator() {
   const retryLast = useCallback(() => {
     const lastUser = [...messages].reverse().find(m => m.role === 'user')
     if (lastUser) {
-      setMessages(prev => prev.slice(0, prev.lastIndexOf(
-        prev.find(m => m.id === lastUser.id)
-      ) + 1))
+      setMessages(prev => {
+        const idx = prev.findIndex(m => m.id === lastUser.id)
+        return idx >= 0 ? prev.slice(0, idx + 1) : prev
+      })
       sendMessage(lastUser.content)
     }
   }, [messages, sendMessage])

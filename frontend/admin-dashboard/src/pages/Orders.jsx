@@ -134,15 +134,21 @@ export default function Orders() {
   })
 
   const exportOrders = () => {
+    const csvField = (val) => {
+      const str = String(val ?? '')
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? `"${str.replace(/"/g, '""')}"`
+        : str
+    }
     const header = 'מספר הזמנה,סטטוס,סכום,עיר,כתובת,מספר מעקב,תאריך'
     const rows = filtered.map(o => [
-      o.external_order_id || o.id?.slice(0, 8),
-      STATUS_CONFIG[o.status]?.label || o.status,
-      o.total_amount != null ? `${Number(o.total_amount).toFixed(2)} ${o.currency || '₪'}` : '',
-      o.shipping_city || '',
-      `"${o.full_address || ''}"`,
-      o.tracking_number || '',
-      o.created_at ? new Date(o.created_at).toLocaleString('he-IL') : '',
+      csvField(o.external_order_id || o.id?.slice(0, 8)),
+      csvField(STATUS_CONFIG[o.status]?.label || o.status),
+      csvField(o.total_amount != null ? `${Number(o.total_amount).toFixed(2)} ${o.currency || '₪'}` : ''),
+      csvField(o.shipping_city || ''),
+      csvField(o.full_address || ''),
+      csvField(o.tracking_number || ''),
+      csvField(o.created_at ? new Date(o.created_at).toLocaleString('he-IL') : ''),
     ].join(','))
     const csv = [header, ...rows].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })

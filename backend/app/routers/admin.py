@@ -1,6 +1,7 @@
 """
 Admin router - dashboard data, overview, and management endpoints.
 """
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -64,7 +65,6 @@ async def simulate_chat(
     )
 
     # Run AI, intent, and sentiment in parallel
-    import asyncio
     ai_task = _ai_router.chat(
         messages=messages,
         system_prompt=system_prompt,
