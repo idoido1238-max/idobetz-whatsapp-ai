@@ -4,10 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import Sidebar from './components/Sidebar.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import ChatSimulator from './pages/ChatSimulator.jsx'
 import Conversations from './pages/Conversations.jsx'
 import Campaigns from './pages/Campaigns.jsx'
 import Analytics from './pages/Analytics.jsx'
 import Products from './pages/Products.jsx'
+import Orders from './pages/Orders.jsx'
 import Users from './pages/Users.jsx'
 import Settings from './pages/Settings.jsx'
 import Login from './pages/Login.jsx'
@@ -35,10 +37,12 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/chat-simulator" element={<ChatSimulator />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/users" element={<Users />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>

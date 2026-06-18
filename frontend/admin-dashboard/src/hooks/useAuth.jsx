@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
     setToken(access_token)
     setUser({ email })
     // Set default auth header
-    axios.defaults.headers.common['Authorization'] = `******
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + access_token
     return response.data
   }, [])
 
@@ -34,7 +34,7 @@ export function AuthProvider({ children }) {
 
   // Set auth header on load
   if (token) {
-    axios.defaults.headers.common['Authorization'] = `******
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
   }
 
   return (
