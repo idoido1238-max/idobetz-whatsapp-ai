@@ -1,9 +1,12 @@
 """
 Admin router - dashboard data, overview, and management endpoints.
 """
+import asyncio
+import logging
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,8 +17,104 @@ from app.models.user import User
 from app.models.order import Order
 from app.models.campaign import Campaign
 from app.models.analytics import AnalyticsEvent
+from app.services.ai.router import AIRouter
+from app.services.nlp.intent import IntentDetector
+from app.services.nlp.sentiment import SentimentAnalyzer
+from app.services.nlp.ner import NERService
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Service instances for chat simulation
+_ai_router = AIRouter()
+_intent_detector = IntentDetector()
+_sentiment_analyzer = SentimentAnalyzer()
+_ner_service = NERService()
+
+
+class SimulateChatRequest(BaseModel):
+    message: str
+    platform: str = "whatsapp"
+    ai_provider: Optional[str] = None
+    history: Optional[List[dict]] = None
+    user_profile: Optional[str] = "standard"
+
+
+@router.post("/chat/simulate")
+async def simulate_chat(
+    req: SimulateChatRequest,
+    _: dict = Depends(get_admin_user),
+):
+    """
+    Simulate a chat message with the AI bot.
+    Returns the AI response along with NLP analysis (intent, sentiment, entities).
+    """
+    started_at = datetime.utcnow()
+
+    # Build message history for context
+    history = req.history or []
+    messages = list(history) + [{"role": "user", "content": req.message}]
+
+    system_prompt = (
+        "You are a helpful AI customer service assistant for an Israeli e-commerce store. "
+        "You support both Hebrew and English. Be friendly, concise, and helpful. "
+        "When asked about products, prices, or orders, explain that you would look up "
+        "real data from the store system in production. "
+        f"Simulated platform: {req.platform}. "
+        f"User profile: {req.user_profile}."
+    )
+
+    # Run AI, intent, and sentiment in parallel
+    ai_task = _ai_router.chat(
+        messages=messages,
+        system_prompt=system_prompt,
+        provider=req.ai_provider,
+    )
+    intent_task = _intent_detector.detect(req.message, history)
+    sentiment_task = _sentiment_analyzer.analyze(req.message)
+
+    try:
+        ai_result, intent_result, sentiment_result = await asyncio.gather(
+            ai_task, intent_task, sentiment_task, return_exceptions=True
+        )
+    except Exception as e:
+        logger.error(f"Simulation error: {e}")
+        ai_result = {"content": "שגיאה בעיבוד ההודעה. אנא נסה שוב.", "provider": "error"}
+        intent_result = {}
+        sentiment_result = {}
+
+    # Handle individual task failures gracefully
+    if isinstance(ai_result, Exception):
+        logger.error(f"AI error: {ai_result}")
+        ai_result = {"content": "שגיאה בעיבוד ההודעה. אנא נסה שוב.", "provider": "error", "tokens": 0}
+    if isinstance(intent_result, Exception):
+        logger.error(f"Intent error: {intent_result}")
+        intent_result = {}
+    if isinstance(sentiment_result, Exception):
+        logger.error(f"Sentiment error: {sentiment_result}")
+        sentiment_result = {}
+
+    # NER entities (non-blocking)
+    entities = {}
+    try:
+        entities = await _ner_service.extract_entities(req.message)
+    except Exception as e:
+        logger.warning(f"NER error: {e}")
+
+    elapsed_ms = int((datetime.utcnow() - started_at).total_seconds() * 1000)
+
+    return {
+        "response": ai_result.get("content", ""),
+        "ai_provider": ai_result.get("provider", req.ai_provider or "openai"),
+        "tokens_used": ai_result.get("tokens", 0),
+        "response_time_ms": elapsed_ms,
+        "intent": intent_result.get("intent"),
+        "intent_confidence": intent_result.get("confidence"),
+        "entities": intent_result.get("entities", entities),
+        "sentiment": sentiment_result.get("sentiment"),
+        "sentiment_score": sentiment_result.get("score"),
+        "sentiment_emotions": sentiment_result.get("emotions", []),
+    }
 
 
 @router.get("/overview")

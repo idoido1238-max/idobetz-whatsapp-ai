@@ -6,19 +6,23 @@ import {
   Megaphone,
   BarChart2,
   Package,
+  ShoppingBag,
   Users,
   Settings,
   LogOut,
   ChevronRight,
   Bot,
+  FlaskConical,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'לוח בקרה', icon: LayoutDashboard },
+  { path: '/chat-simulator', label: 'סימולטור צ׳אט', icon: FlaskConical },
   { path: '/conversations', label: 'שיחות', icon: MessageCircle },
   { path: '/campaigns', label: 'קמפיינים', icon: Megaphone },
   { path: '/analytics', label: 'אנליטיקס', icon: BarChart2 },
+  { path: '/orders', label: 'הזמנות', icon: ShoppingBag },
   { path: '/products', label: 'מוצרים', icon: Package },
   { path: '/users', label: 'משתמשים', icon: Users },
   { path: '/settings', label: 'הגדרות', icon: Settings },
