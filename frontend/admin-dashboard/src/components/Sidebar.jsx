@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Bot,
   FlaskConical,
+  Share2,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { path: '/orders', label: 'הזמנות', icon: ShoppingBag },
   { path: '/products', label: 'מוצרים', icon: Package },
   { path: '/users', label: 'משתמשים', icon: Users },
+  { path: '/meta-integration', label: 'Meta Integration', icon: Share2 },
   { path: '/settings', label: 'הגדרות', icon: Settings },
 ]
 
