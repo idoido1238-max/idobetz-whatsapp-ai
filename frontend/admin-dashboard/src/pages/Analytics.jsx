@@ -1,120 +1,85 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer
-} from 'recharts'
+import { BarMetricChart, LineMetricChart, PlatformPieChart } from '../components/ChartComponents.jsx'
+
+function MetricCard({ title, value, suffix = '' }) {
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+      <div className="text-sm text-gray-500 dark:text-gray-400">{title}</div>
+      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{value}{suffix}</div>
+    </div>
+  )
+}
 
 export default function Analytics() {
-  const { data: messagesPerDay = [] } = useQuery({
-    queryKey: ['messages-per-day'],
-    queryFn: () => axios.get('/api/v1/analytics/messages-per-day').then(r => r.data),
+  const { data: overview, isLoading: loadingOverview } = useQuery({
+    queryKey: ['admin-analytics-overview'],
+    queryFn: () => axios.get('/api/v1/admin/analytics/overview').then(r => r.data),
   })
 
-  const { data: responseTimes = [] } = useQuery({
-    queryKey: ['response-times'],
-    queryFn: () => axios.get('/api/v1/analytics/response-times').then(r => r.data),
+  const { data: metrics, isLoading: loadingMetrics } = useQuery({
+    queryKey: ['admin-analytics-metrics'],
+    queryFn: () => axios.get('/api/v1/admin/analytics/metrics').then(r => r.data),
   })
 
-  const { data: satisfaction } = useQuery({
-    queryKey: ['satisfaction'],
-    queryFn: () => axios.get('/api/v1/analytics/satisfaction-scores').then(r => r.data),
+  const { data: topQuestions = [] } = useQuery({
+    queryKey: ['admin-top-questions'],
+    queryFn: () => axios.get('/api/v1/admin/analytics/top-questions').then(r => r.data),
   })
 
-  const { data: userGrowth = [] } = useQuery({
-    queryKey: ['user-growth'],
-    queryFn: () => axios.get('/api/v1/analytics/user-growth').then(r => r.data),
-  })
+  const loading = loadingOverview || loadingMetrics
 
   return (
-    <div className="p-8" dir="rtl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">אנליטיקס</h1>
-      <p className="text-gray-500 mb-8">סטטיסטיקות וביצועים</p>
+    <div className="p-4 md:p-8" dir="rtl">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">Analytics</h1>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">מדדי שימוש, הכנסות וביצועים</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Messages per day */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">הודעות ביום (30 ימים)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={messagesPerDay}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {loading ? (
+        <div className="py-10 text-center text-gray-400">טוען נתונים...</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <MetricCard title="Response time avg" value={Math.round(overview?.avg_response_time_ms || 0)} suffix="ms" />
+            <MetricCard title="User satisfaction" value={Math.round(overview?.user_satisfaction_score || 0)} suffix="/100" />
+            <MetricCard title="Conversion rate" value={overview?.conversion_rate || 0} suffix="%" />
+            <MetricCard title="Average order value" value={`₪${(overview?.average_order_value || 0).toFixed(2)}`} />
+          </div>
 
-        {/* User growth */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">גידול משתמשים (30 ימים)</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={userGrowth}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="new_users" fill="#10b981" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+              <h3 className="font-semibold mb-3 dark:text-gray-100">Daily Active Users (7 days)</h3>
+              <LineMetricChart data={overview?.daily_active_users || []} dataKey="count" />
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+              <h3 className="font-semibold mb-3 dark:text-gray-100">Revenue chart</h3>
+              <LineMetricChart data={metrics?.revenue || []} dataKey="value" stroke="#10b981" />
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+              <h3 className="font-semibold mb-3 dark:text-gray-100">Message volume</h3>
+              <BarMetricChart data={metrics?.message_volume || []} dataKey="count" fill="#3b82f6" />
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+              <h3 className="font-semibold mb-3 dark:text-gray-100">Platform breakdown</h3>
+              <PlatformPieChart data={metrics?.platform_breakdown || []} />
+              <div className="text-xs text-gray-500 mt-2">WhatsApp / Messenger / Instagram</div>
+            </div>
+          </div>
 
-        {/* Response times */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">זמני תגובה AI (ms)</h3>
-          {responseTimes.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">אין נתונים</p>
-          ) : (
-            <div className="space-y-3">
-              {responseTimes.map(rt => (
-                <div key={rt.provider} className="flex items-center gap-3">
-                  <span className="w-24 text-sm font-medium text-gray-700 capitalize">{rt.provider}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-3">
-                    <div
-                      className="bg-blue-500 h-3 rounded-full"
-                      style={{ width: `${Math.min((rt.avg_response_time_ms / 5000) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500 w-20 text-left ltr">
-                    {rt.avg_response_time_ms.toFixed(0)}ms
-                  </span>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+            <h3 className="font-semibold mb-3 dark:text-gray-100">Top 10 questions asked</h3>
+            <div className="space-y-2 text-sm">
+              {topQuestions.map((item, idx) => (
+                <div key={`${item.question}-${idx}`} className="flex justify-between gap-3 border-b border-gray-100 dark:border-slate-700 pb-2">
+                  <span className="text-gray-700 dark:text-gray-200 truncate">{item.question}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{item.count}</span>
                 </div>
               ))}
+              {topQuestions.length === 0 && <div className="text-gray-400">אין נתונים</div>}
             </div>
-          )}
-        </div>
-
-        {/* Satisfaction */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">שביעות רצון לקוחות</h3>
-          {satisfaction ? (
-            <div className="text-center py-4">
-              <div className="text-6xl font-bold text-blue-600 mb-2">
-                {satisfaction.average_score.toFixed(1)}
-              </div>
-              <div className="text-gray-500">מתוך 5</div>
-              <div className="text-sm text-gray-400 mt-2">
-                {satisfaction.total_rated} שיחות מדורגות ב-{satisfaction.period_days} ימים
-              </div>
-              {/* Star display */}
-              <div className="flex justify-center gap-1 mt-3">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <span
-                    key={star}
-                    className={`text-2xl ${star <= Math.round(satisfaction.average_score) ? 'text-yellow-400' : 'text-gray-200'}`}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-400 text-center py-8">אין נתונים</p>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
