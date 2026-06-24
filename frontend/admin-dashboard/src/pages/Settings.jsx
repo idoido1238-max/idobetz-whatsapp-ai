@@ -1,81 +1,101 @@
-import React from 'react'
-import { Settings as SettingsIcon } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+
+const defaults = {
+  openai_api_key: '',
+  claude_api_key: '',
+  whatsapp_api_token: '',
+  whatsapp_phone_id: '',
+  messenger_token_status: 'not_configured',
+  instagram_business_id: '',
+  website_api_url: '',
+  bot_name: '',
+  response_language: 'he',
+  support_email: '',
+  theme: 'light',
+}
 
 export default function Settings() {
+  const [form, setForm] = useState(defaults)
+
+  const { data } = useQuery({
+    queryKey: ['admin-settings'],
+    queryFn: () => axios.get('/api/v1/admin/settings').then(r => r.data),
+  })
+
+  useEffect(() => {
+    if (data) setForm(prev => ({ ...prev, ...data }))
+  }, [data])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', form.theme === 'dark')
+  }, [form.theme])
+
+  const saveMutation = useMutation({
+    mutationFn: payload => axios.put('/api/v1/admin/settings', payload),
+    onSuccess: () => toast.success('ההגדרות נשמרו בהצלחה'),
+    onError: () => toast.error('שגיאה בשמירת הגדרות'),
+  })
+
+  const testMutation = useMutation({
+    mutationFn: () => axios.post('/api/v1/admin/settings/test-connection'),
+    onSuccess: () => toast.success('בדיקת חיבור הושלמה'),
+    onError: () => toast.error('בדיקת חיבור נכשלה'),
+  })
+
+  const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }))
+
   return (
-    <div className="p-8" dir="rtl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">הגדרות</h1>
-      <p className="text-gray-500 mb-8">תצורת המערכת</p>
+    <div className="p-4 md:p-8" dir="rtl">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">Settings</h1>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">ניהול תצורות API, אינטגרציות והגדרות כלליות</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* API Status */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">סטטוס חיבורים</h3>
-          <div className="space-y-3">
-            {[
-              { name: 'OpenAI GPT-4o', status: 'active' },
-              { name: 'Anthropic Claude', status: 'active' },
-              { name: 'WhatsApp Business API', status: 'check' },
-              { name: 'Meta Messenger API', status: 'check' },
-              { name: 'Instagram API', status: 'check' },
-              { name: 'Website API', status: 'check' },
-              { name: 'PostgreSQL', status: 'active' },
-              { name: 'Redis', status: 'active' },
-            ].map(item => (
-              <div key={item.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                <span className="text-sm text-gray-700">{item.name}</span>
-                <span className={`flex items-center gap-1 text-xs ${
-                  item.status === 'active' ? 'text-green-600' : 'text-yellow-600'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${
-                    item.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'
-                  }`} />
-                  {item.status === 'active' ? 'פעיל' : 'בדוק הגדרות'}
-                </span>
-              </div>
-            ))}
+      <div className="space-y-4">
+        <section className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="font-semibold mb-3 dark:text-gray-100">API Configuration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input type="password" value={form.openai_api_key} onChange={e => update('openai_api_key', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="OPENAI_API_KEY" />
+            <input type="password" value={form.claude_api_key} onChange={e => update('claude_api_key', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="CLAUDE_API_KEY" />
+            <input type="password" value={form.whatsapp_api_token} onChange={e => update('whatsapp_api_token', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="WHATSAPP_API_TOKEN" />
           </div>
-        </div>
+        </section>
 
-        {/* Features */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-800 mb-4">פיצ׳רים פעילים</h3>
-          <div className="space-y-3">
-            {[
-              { name: 'תמלול הקלטות קוליות (Whisper)', enabled: true },
-              { name: 'ניתוח סנטימנט', enabled: true },
-              { name: 'זיהוי כוונות', enabled: true },
-              { name: 'המלצות מוצרים', enabled: true },
-              { name: 'מעקב הזמנות עם כתובת מלאה', enabled: true },
-              { name: 'קמפיינים אוטומטיים', enabled: true },
-              { name: 'ניקוד נאמנות', enabled: true },
-              { name: 'מצב פרטיות (Ollama)', enabled: false },
-            ].map(feature => (
-              <div key={feature.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                <span className="text-sm text-gray-700">{feature.name}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  feature.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {feature.enabled ? 'פעיל' : 'כבוי'}
-                </span>
-              </div>
-            ))}
+        <section className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="font-semibold mb-3 dark:text-gray-100">Platform Integration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input value={form.whatsapp_phone_id} onChange={e => update('whatsapp_phone_id', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="WhatsApp Phone ID" />
+            <input value={form.messenger_token_status} onChange={e => update('messenger_token_status', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="Messenger Token status" />
+            <input value={form.instagram_business_id} onChange={e => update('instagram_business_id', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="Instagram Business ID" />
           </div>
-        </div>
+        </section>
 
-        {/* Environment note */}
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 lg:col-span-2">
-          <div className="flex items-start gap-3">
-            <SettingsIcon size={20} className="text-blue-600 mt-0.5 shrink-0" />
-            <div>
-              <h4 className="font-semibold text-blue-800 mb-1">הגדרת משתני סביבה</h4>
-              <p className="text-sm text-blue-700">
-                כל ההגדרות מנוהלות דרך קובץ <code className="bg-blue-100 px-1 rounded">.env</code>.
-                ראה <code className="bg-blue-100 px-1 rounded">.env.example</code> לדוגמת הגדרות מלאה.
-              </p>
-            </div>
+        <section className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="font-semibold mb-3 dark:text-gray-100">Website Integration</h3>
+          <div className="flex flex-col md:flex-row gap-3">
+            <input value={form.website_api_url} onChange={e => update('website_api_url', e.target.value)} className="flex-1 border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="API URL" />
+            <button onClick={() => testMutation.mutate()} className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg">Test connection</button>
           </div>
-        </div>
+        </section>
+
+        <section className="bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-700 p-4">
+          <h3 className="font-semibold mb-3 dark:text-gray-100">General Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input value={form.bot_name} onChange={e => update('bot_name', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="Bot name" />
+            <select value={form.response_language} onChange={e => update('response_language', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+              <option value="he">Hebrew</option>
+              <option value="en">English</option>
+            </select>
+            <input value={form.support_email} onChange={e => update('support_email', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="Support email" />
+            <select value={form.theme} onChange={e => update('theme', e.target.value)} className="border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+        </section>
+
+        <button onClick={() => saveMutation.mutate(form)} className="bg-green-600 text-white px-5 py-2 rounded-lg">Save</button>
       </div>
     </div>
   )

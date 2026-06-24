@@ -6,11 +6,11 @@ import Sidebar from './components/Sidebar.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import ChatSimulator from './pages/ChatSimulator.jsx'
 import Conversations from './pages/Conversations.jsx'
-import Campaigns from './pages/Campaigns.jsx'
+import CampaignManager from './pages/CampaignManager.jsx'
 import Analytics from './pages/Analytics.jsx'
 import Products from './pages/Products.jsx'
 import Orders from './pages/Orders.jsx'
-import Users from './pages/Users.jsx'
+import UserManagement from './pages/UserManagement.jsx'
 import Settings from './pages/Settings.jsx'
 import Login from './pages/Login.jsx'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
@@ -39,11 +39,11 @@ function AppLayout() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat-simulator" element={<ChatSimulator />} />
           <Route path="/conversations" element={<Conversations />} />
-          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns" element={<CampaignManager />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/products" element={<Products />} />
           <Route path="/orders" element={<Orders />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/users" element={<UserManagement />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
